@@ -24,11 +24,9 @@ import java.io.File
 import java.io.IOException
 
 private val NORMAL_VERSION = 8
-private val EXPERIMENTAL_VERSION = 4
 private val DATA_CONTAINER_VERSION = 2
 
 private val NORMAL_VERSION_FILE_NAME = "format-version.txt"
-private val EXPERIMENTAL_VERSION_FILE_NAME = "experimental-format-version.txt"
 private val DATA_CONTAINER_VERSION_FILE_NAME = "data-container-format-version.txt"
 
 class CacheVersion(
