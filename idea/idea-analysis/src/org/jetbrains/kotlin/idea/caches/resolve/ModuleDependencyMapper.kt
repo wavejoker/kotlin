@@ -51,7 +51,8 @@ fun createModuleResolverProvider(
         moduleFilter: (IdeaModuleInfo) -> Boolean,
         allModules: Collection<IdeaModuleInfo>?,
         providedBuiltIns: KotlinBuiltIns?, // null means create new builtins based on SDK
-        dependencies: Collection<Any>
+        dependencies: Collection<Any>,
+        invalidateOnOOCB: Boolean = true
 ): ModuleResolverProvider {
     val builtIns = providedBuiltIns ?: createBuiltIns(analysisSettings, globalContext)
 
@@ -79,7 +80,8 @@ fun createModuleResolverProvider(
             delegateResolver, { _, c -> IDEPackagePartProvider(c.moduleContentScope) },
             analysisSettings.sdk?.let { SdkInfo(project, it) },
             modulePlatforms = { module -> module.platform?.multiTargetPlatform },
-            packageOracleFactory = project.service<IdePackageOracleFactory>()
+            packageOracleFactory = project.service<IdePackageOracleFactory>(),
+            invalidateOnOOCB = invalidateOnOOCB
     )
 
     if (providedBuiltIns == null && builtIns is JvmBuiltIns) {

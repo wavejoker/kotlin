@@ -124,6 +124,7 @@ class KotlinCacheServiceImpl(val project: Project) : KotlinCacheService {
                        LibraryModificationTracker.getInstance(project),
                        ProjectRootModificationTracker.getInstance(project)
                 ),
+                invalidateOnOOCB = false,
                 reuseDataFrom = null
         )
 
@@ -133,6 +134,7 @@ class KotlinCacheServiceImpl(val project: Project) : KotlinCacheService {
                 project, librariesContext, settings,
                 reuseDataFrom = facadeForSdk,
                 moduleFilter = { it is LibraryInfo },
+                invalidateOnOOCB = false,
                 dependencies = listOf(
                         LibraryModificationTracker.getInstance(project),
                         ProjectRootModificationTracker.getInstance(project)
@@ -145,7 +147,10 @@ class KotlinCacheServiceImpl(val project: Project) : KotlinCacheService {
                 project, modulesContext, settings,
                 reuseDataFrom = facadeForLibraries,
                 moduleFilter = { !it.isLibraryClasses() },
-                dependencies = listOf(PsiModificationTracker.OUT_OF_CODE_BLOCK_MODIFICATION_COUNT)
+                dependencies = listOf(
+                        LibraryModificationTracker.getInstance(project),
+                        ProjectRootModificationTracker.getInstance(project)
+                )
         )
     }
 
