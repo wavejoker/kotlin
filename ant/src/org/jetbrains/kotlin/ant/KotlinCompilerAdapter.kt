@@ -28,9 +28,9 @@ import java.io.File
 import java.util.*
 
 class KotlinCompilerAdapter : Javac13() {
-    var moduleName: String? = null
+    private var moduleName: String? = null
 
-    var additionalArguments: MutableList<Commandline.Argument> = ArrayList(0)
+    private var additionalArguments: MutableList<Commandline.Argument> = ArrayList(0)
 
     @Suppress("unused") // Used via reflection by Ant
     fun createCompilerArg(): Commandline.Argument {

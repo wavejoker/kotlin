@@ -27,10 +27,10 @@ import java.util.*
 
 open class ProtoCompareGenerated(val oldNameResolver: NameResolver, val newNameResolver: NameResolver) {
     private val strings = Interner<String>()
-    val oldStringIndexesMap: MutableMap<Int, Int> = hashMapOf()
-    val newStringIndexesMap: MutableMap<Int, Int> = hashMapOf()
-    val oldClassIdIndexesMap: MutableMap<Int, Int> = hashMapOf()
-    val newClassIdIndexesMap: MutableMap<Int, Int> = hashMapOf()
+    private val oldStringIndexesMap: MutableMap<Int, Int> = hashMapOf()
+    private val newStringIndexesMap: MutableMap<Int, Int> = hashMapOf()
+    private val oldClassIdIndexesMap: MutableMap<Int, Int> = hashMapOf()
+    private val newClassIdIndexesMap: MutableMap<Int, Int> = hashMapOf()
 
     private val classIds = Interner<ClassId>()
 

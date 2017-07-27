@@ -77,7 +77,7 @@ open class KnownClassDescriptor(
                     initialize(emptyList(), supertypes)
                 }
 
-        inline fun createClassWithTypeParameters(
+        inline private fun createClassWithTypeParameters(
                 name: Name,
                 containingDeclaration: DeclarationDescriptor,
                 supertypes: List<KotlinType>,
