@@ -227,6 +227,7 @@ class KotlinCacheServiceImpl(val project: Project) : KotlinCacheService {
                 val dependentModules = syntheticFileModule.getDependentModules()
                 val modulesFacade = globalFacade(settings)
                 val globalContext = modulesFacade.globalContext.contextWithNewLockAndCompositeExceptionTracker()
+                println("Creating facadeForSynthetic for $syntheticFileModule and $files")
                 makeProjectResolutionFacade(
                         "facadeForSynthetic in ModuleSourceInfo",
                         globalContext,
@@ -344,6 +345,7 @@ class KotlinCacheServiceImpl(val project: Project) : KotlinCacheService {
         val moduleInfo = file.getModuleInfo()
         val notInSourceFiles = files.filterNotInProjectSource(moduleInfo)
         return if (notInSourceFiles.isNotEmpty()) {
+            println("Requesting facade to analyze $notInSourceFiles")
             val projectFacade = getFacadeForSyntheticFiles(notInSourceFiles)
             ResolutionFacadeImpl(projectFacade, moduleInfo)
         }
