@@ -107,6 +107,12 @@ public class IncrementalLazyCachesTestGenerated extends AbstractIncrementalLazyC
             doTest(fileName);
         }
 
+        @TestMetadata("incrementalOffOnJavaChanged")
+        public void testIncrementalOffOnJavaChanged() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("jps-plugin/testData/incremental/changeIncrementalOption/incrementalOffOnJavaChanged/");
+            doTest(fileName);
+        }
+
         @TestMetadata("incrementalOffOnJavaOnly")
         public void testIncrementalOffOnJavaOnly() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("jps-plugin/testData/incremental/changeIncrementalOption/incrementalOffOnJavaOnly/");
