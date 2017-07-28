@@ -17,19 +17,25 @@
 package org.jetbrains.kotlin.jps.build
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.util.io.FileUtil
+import com.intellij.util.containers.ContainerUtil
 import org.jetbrains.jps.ModuleChunk
+import org.jetbrains.jps.builders.BuildRootIndex
+import org.jetbrains.jps.builders.BuildTarget
+import org.jetbrains.jps.builders.BuildTargetIndex
+import org.jetbrains.jps.builders.java.dependencyView.Mappings
 import org.jetbrains.jps.incremental.CompileContext
 import org.jetbrains.jps.incremental.FSOperations
-import org.jetbrains.jps.incremental.ModuleBuildTarget
 import org.jetbrains.jps.incremental.fs.CompilationRound
 import java.io.File
+import java.util.HashMap
 
 class FSOperationsHelper(
         private val compileContext: CompileContext,
         private val chunk: ModuleChunk,
         private val log: Logger
 ) {
+    private val moduleBasedFilter = ModulesBasedFileFilter(compileContext, chunk)
+
     internal var hasMarkedDirty = false
         private set
 
@@ -55,10 +61,8 @@ class FSOperationsHelper(
 
     fun markFiles(files: Iterable<File>, excludeFiles: Set<File> = setOf()) {
         val filesToMark = files.filterTo(HashSet()) {
-            it !in excludeFiles && it.exists()
+            it !in excludeFiles && it.exists() && moduleBasedFilter.accept(it)
         }
-
-        removeFilesFromCompiledTargets(filesToMark)
 
         if (filesToMark.isEmpty()) return
 
@@ -71,40 +75,34 @@ class FSOperationsHelper(
         hasMarkedDirty = true
     }
 
-    // remove files from chunks preceding current chunk in a build
-    private fun removeFilesFromCompiledTargets(filesToMark: HashSet<File>) {
-        val targetToDirtyFiles = groupFilesByTargets(filesToMark)
+    // Based on `JavaBuilderUtil#ModulesBasedFileFilter` from Intellij
+    private class ModulesBasedFileFilter(
+            private val context: CompileContext,
+            chunk: ModuleChunk
+    ) : Mappings.DependentFilesFilter {
+        private val chunkTargets: Set<BuildTarget<*>>
+        private val cache = HashMap<BuildTarget<*>, Set<BuildTarget<*>>>()
+        private val buildRootIndex: BuildRootIndex
+        private val buildTargetIndex: BuildTargetIndex
 
-        chunk.targets.forEach { targetToDirtyFiles.remove(it) }
-        if (targetToDirtyFiles.isEmpty()) {
-            // all dirty targets are from current chunk
-            return
+        init {
+            chunkTargets = chunk.targets
+            buildRootIndex = context.projectDescriptor.buildRootIndex
+            buildTargetIndex = context.projectDescriptor.buildTargetIndex
         }
 
-        val buildTargetIndex = compileContext.projectDescriptor.buildTargetIndex
-        val sortedTargetChunks = buildTargetIndex.getSortedTargetChunks(compileContext)
+        override fun accept(file: File): Boolean {
+            val rd = buildRootIndex.findJavaRootDescriptor(context, file) ?: return true
+            val target = rd.target
+            if (target in chunkTargets) return true
 
-        for (targetChunk in sortedTargetChunks) {
-            if (targetChunk.targets == chunk.targets) {
-                // found current chunk
-                return
-            }
-
-            for (compiledTarget in targetChunk.targets) {
-                val filesFromCompiledTarget = targetToDirtyFiles[compiledTarget] ?: continue
-                filesToMark.removeAll(filesFromCompiledTarget)
-            }
+            val targetOfFileWithDependencies = cache.getOrPut(target) { buildTargetIndex.getDependenciesRecursively(target, context) }
+            return ContainerUtil.intersects(targetOfFileWithDependencies, chunkTargets)
         }
-    }
 
-    private fun groupFilesByTargets(filesToMark: MutableSet<File>): MutableMap<ModuleBuildTarget, out Collection<File>> {
-        val buildRootIndex = compileContext.projectDescriptor.buildRootIndex
-        val targetToDirtyFiles = HashMap<ModuleBuildTarget, MutableSet<File>>()
-        for (dirtyFile in filesToMark) {
-            val javaRoot = buildRootIndex.findJavaRootDescriptor(compileContext, dirtyFile) ?: continue
-            val dirtyFilesForTarget = targetToDirtyFiles.getOrPut(javaRoot.target) { HashSet() }
-            dirtyFilesForTarget.add(dirtyFile)
+        override fun belongsToCurrentTargetChunk(file: File): Boolean {
+            val rd = buildRootIndex.findJavaRootDescriptor(context, file)
+            return rd != null && chunkTargets.contains(rd.target)
         }
-        return targetToDirtyFiles
     }
 }
